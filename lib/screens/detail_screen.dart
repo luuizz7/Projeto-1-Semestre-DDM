@@ -28,7 +28,7 @@ class DetailScreen extends StatelessWidget {
               style: TextButton.styleFrom(foregroundColor: Colors.red),
               child: const Text('Deletar'),
               onPressed: () {
-                // Deleta o filme do banco de dados.
+                // deleta o filme do banco de dados
                 FirebaseFirestore.instance
                     .collection('users')
                     .doc(userId)
@@ -36,7 +36,7 @@ class DetailScreen extends StatelessWidget {
                     .doc(movieId)
                     .delete();
                 
-                // Fecha o diálogo e a tela de detalhes, voltando para a lista.
+                // Fecha o diálogo e a tela de detalhes, voltando para a lista
                 Navigator.of(context).popUntil((route) => route.isFirst);
               },
             ),

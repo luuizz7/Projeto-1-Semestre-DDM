@@ -90,3 +90,14 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+# adiciona o favicon do site
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/favicon.png"
+
+  web:
+    generate: true
+    # 'image_path' para a web deve estar DENTRO de 'web'
+    image_path: "assets/favicon.png"

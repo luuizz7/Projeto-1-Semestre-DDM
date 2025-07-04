@@ -9,7 +9,7 @@ class AuthGate extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // O StreamBuilder é um widget que se atualiza automaticamente
+    // O StreamBuilder atualiza automaticamente
     // com base em um fluxo de dados em tempo real.
     return StreamBuilder<User?>(
       // A fonte de dados é o status de login do usuário no Firebase.
@@ -17,7 +17,7 @@ class AuthGate extends StatelessWidget {
       
       // O builder decide o que mostrar na tela com base na informação mais recente (snapshot).
       builder: (context, snapshot) {
-        // Se o snapshot tem dados, significa que o usuário está logado.
+        // Se os dados baterem, significa que o usuário está logado.
         if (snapshot.hasData) {
           // Se logado, mostra a tela principal.
           return const HomeScreen();
