@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "31784643804",
+    "project_id": "projetoddm1semestre",
+    "storage_bucket": "projetoddm1semestre.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:31784643804:android:0c927c6cfb8acf2b4c9819",
+        "android_client_info": {
+          "package_name": "alvassete.com.br.flutter_application"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCHlAovjqAI8JTLAfegP3KYDxj-UUCmcrE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
