@@ -28,7 +28,7 @@ class MyApp extends StatelessWidget {
       title: 'Catálogo de Filmes',
       // tira a faixa de debug (porque se nao tirar ela, fica em cima do nosso botao de sair)
       debugShowCheckedModeBanner: false, 
-      // tema escuro com detalhes em amarelo
+      // tema do nosso site
       theme: ThemeData.dark().copyWith(
         primaryColor: Colors.amber,
         colorScheme: ColorScheme.dark().copyWith(
