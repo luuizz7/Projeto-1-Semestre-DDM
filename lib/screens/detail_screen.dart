@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-// Esta tela mostra as informações de um filme específico que o usuário selecionou.
+// tela de detalhes do filme
 class DetailScreen extends StatelessWidget {
-  // A tela precisa saber o ID do usuário e o ID do filme para buscar os dados certos.
+  // id do usuario e do filme
   final String userId;
   final String movieId;
 
-  // Construtor que recebe os IDs da tela anterior.
+  // construtor
   const DetailScreen({
     super.key,
     required this.userId,
     required this.movieId,
   });
 
-  // Função que mostra a janela de confirmação antes de deletar o filme.
+  // abre dialogo para deletar
   void _abrirDialogoDeletar(BuildContext context) {
     showDialog(
       context: context,
@@ -28,15 +28,9 @@ class DetailScreen extends StatelessWidget {
               style: TextButton.styleFrom(foregroundColor: Colors.red),
               child: const Text('Deletar'),
               onPressed: () {
-                // deleta o filme do banco de dados
-                FirebaseFirestore.instance
-                    .collection('users')
-                    .doc(userId)
-                    .collection('movies')
-                    .doc(movieId)
-                    .delete();
-                
-                // Fecha o diálogo e a tela de detalhes, voltando para a lista
+                // deleta o filme
+                FirebaseFirestore.instance.collection('users').doc(userId).collection('movies').doc(movieId).delete();
+                // volta pra tela inicial
                 Navigator.of(context).popUntil((route) => route.isFirst);
               },
             ),
@@ -48,47 +42,42 @@ class DetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Usamos um FutureBuilder para tarefas que demoram um pouco e acontecem só uma vez,
-    // como buscar os dados de um filme específico no Firebase.
+    // busca os dados do filme no firebase
     return FutureBuilder<DocumentSnapshot>(
-      // A "tarefa futura" que ele vai executar: buscar o documento do filme.
       future: FirebaseFirestore.instance.collection('users').doc(userId).collection('movies').doc(movieId).get(),
-      
-      // O builder desenha a tela com base no resultado da tarefa.
+      // constroi a tela com base no resultado
       builder: (context, snapshot) {
-        
-        // 1. Enquanto a busca está acontecendo, mostramos uma tela de carregamento.
+        // enquanto carrega, mostra um circulo
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Scaffold(appBar: AppBar(), body: const Center(child: CircularProgressIndicator()));
         }
 
-        // 2. Se deu algum erro ou o filme não foi encontrado, mostramos um aviso.
+        // se der erro ou nao achar o filme
         if (!snapshot.hasData || !snapshot.data!.exists) {
           return Scaffold(appBar: AppBar(), body: const Center(child: Text('Filme não encontrado.')));
         }
 
-        // 3. Se a busca deu certo, pegamos os dados do filme.
+        // se deu certo, pega os dados
         final dadosDoFilme = snapshot.data!.data() as Map<String, dynamic>;
         final posterUrl = dadosDoFilme['posterUrl'] as String? ?? '';
         final director = dadosDoFilme['director'] as String? ?? 'N/A';
         final year = dadosDoFilme['year'] ?? 'N/A';
 
-        // E finalmente, construímos a tela com os dados encontrados.
+        // constroi a tela com os dados
         return Scaffold(
           appBar: AppBar(
             title: Text(dadosDoFilme['title'] ?? 'Detalhes'),
-            // Adiciona o botão de lixeira na barra de título.
+            // botao de lixeira
             actions: [
               IconButton(icon: const Icon(Icons.delete), tooltip: 'Deletar Filme', onPressed: () => _abrirDialogoDeletar(context)),
             ],
           ),
-          // Usamos um SingleChildScrollView para que a tela possa ser rolada
-          // caso a descrição do filme seja muito longa.
+          // permite rolar a tela
           body: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Mostra o pôster do filme no topo.
+                // poster do filme
                 if (posterUrl.isNotEmpty)
                   Image.network(
                     posterUrl,
@@ -97,25 +86,25 @@ class DetailScreen extends StatelessWidget {
                     fit: BoxFit.cover,
                   ),
                 
-                // Um Padding para dar um respiro ao redor das informações de texto.
+                // espacamento
                 Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Título do filme.
+                      // titulo
                       Text(
                         dadosDoFilme['title'] ?? 'Título não disponível',
                         style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
-                      // Diretor e Ano.
+                      // diretor e ano
                       Text(
                         'Diretor: $director • Ano: $year',
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
                       const Divider(height: 32),
-                      // Descrição do filme.
+                      // descricao
                       Text(
                         'Descrição',
                         style: Theme.of(context).textTheme.titleLarge,

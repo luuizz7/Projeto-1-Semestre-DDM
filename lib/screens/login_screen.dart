@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-// Esta é a tela de Login e Cadastro do nosso aplicativo.
+// tela de login e cadastro
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -10,35 +10,35 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  // Chave para validar o formulário de e-mail e senha.
+  // chave pro formulário
   final _formKey = GlobalKey<FormState>();
 
-  // Controladores para pegar o texto que o usuário digita.
+  // controladores de texto
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  // Variável para controlar a animação de "carregando".
+  // pra mostrar o "carregando"
   bool _isLoading = false;
 
-  // --- Função para fazer o LOGIN (ENTRAR) ---
+  // função para entrar
   Future<void> _fazLogin() async {
-    // 1. Valida se os campos foram preenchidos corretamente.
+    // valida o formulário
     if (!_formKey.currentState!.validate()) {
-      return; // Para a execução se o formulário for inválido.
+      return;
     }
 
-    // 2. Mostra a animação de carregando.
+    // mostra o carregando
     setState(() { _isLoading = true; });
 
-    // 3. Tenta fazer o login no Firebase.
+    // tenta fazer o login
     try {
       await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
-      // Se o login der certo, o AuthGate nos levará para a tela principal.
+      // se der certo, o authgate cuida do resto
     } on FirebaseAuthException catch (e) {
-      // Se der erro, mostra uma mensagem amigável para o usuário.
+      // se der erro, mostra uma mensagem
       String mensagem = 'Ocorreu um erro.';
       if (e.code == 'user-not-found' || e.code == 'wrong-password' || e.code == 'invalid-credential') {
         mensagem = 'E-mail ou senha incorreta.';
@@ -46,29 +46,29 @@ class _LoginScreenState extends State<LoginScreen> {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(mensagem)));
     }
 
-    // 4. Esconde a animação de carregando.
+    // esconde o carregando
     setState(() { _isLoading = false; });
   }
   
-  // --- Função para CRIAR UMA NOVA CONTA ---
+  // função pra criar conta
   Future<void> _criaConta() async {
-    // 1. Valida o formulário.
+    // valida o formulário
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
-    // 2. Mostra o carregando.
+    // mostra o carregando
     setState(() { _isLoading = true; });
 
-    // 3. Tenta criar a conta no Firebase.
+    // tenta criar a conta
     try {
       await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
-      // Se der certo, o AuthGate já nos joga para a tela principal.
+      // se der certo, o authgate cuida do resto
     } on FirebaseAuthException catch (e) {
-      // Trata os erros mais comuns de cadastro.
+      // trata os erros mais comuns
       String mensagem = 'Ocorreu um erro.';
       if (e.code == 'email-already-in-use') {
         mensagem = 'Este e-mail já está cadastrado. Tente fazer login.';
@@ -78,7 +78,7 @@ class _LoginScreenState extends State<LoginScreen> {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(mensagem)));
     }
 
-    // 4. Esconde o carregando.
+    // esconde o carregando
     setState(() { _isLoading = false; });
   }
 
@@ -88,20 +88,20 @@ class _LoginScreenState extends State<LoginScreen> {
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
-          // Caixa para limitar a largura do formulário em telas grandes.
+          // uma caixa pra limitar a largura em telas grandes
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 400),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Ícone e título da tela.
+                // icone e titulo
                 Icon(Icons.movie_filter_sharp, size: 80, color: Theme.of(context).colorScheme.primary),
                 const SizedBox(height: 20),
                 const Text('Bem-vindo ao Catálogo', textAlign: TextAlign.center, style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 40),
                 
-                // O formulário com os campos de texto.
+                // formulário
                 Form(
                   key: _formKey,
                   child: Column(
@@ -121,7 +121,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       TextFormField(
                         controller: _passwordController,
                         decoration: const InputDecoration(labelText: 'Senha', prefixIcon: Icon(Icons.lock_outline), border: OutlineInputBorder()),
-                        obscureText: true, // Esconde a senha.
+                        obscureText: true, 
                         validator: (value) {
                           if (value == null || value.isEmpty || value.length < 6) {
                             return 'A senha deve ter pelo menos 6 caracteres.';
@@ -134,7 +134,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 24),
                 
-                // Se estiver carregando, mostra a animação. Senão, mostra os botões.
+                // mostra o carregamento
                 if (_isLoading)
                   const Center(child: CircularProgressIndicator())
                 else
@@ -142,13 +142,13 @@ class _LoginScreenState extends State<LoginScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       ElevatedButton(
-                        onPressed: _fazLogin, // Chama a função de login.
+                        onPressed: _fazLogin, // chama a função de login
                         style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
                         child: const Text('Entrar'),
                       ),
                       const SizedBox(height: 12),
                       TextButton(
-                        onPressed: _criaConta, // Chama a função de criar conta.
+                        onPressed: _criaConta, // chama a função de criar conta
                         child: const Text('Não tem uma conta? Criar Conta'),
                       ),
                     ],

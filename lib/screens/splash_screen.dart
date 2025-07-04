@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'auth_gate.dart'; // Importamos o AuthGate, que é nosso próximo passo.
+import 'auth_gate.dart'; // nosso verificador de login
 
-// Esta é a tela de abertura do aplicativo (Splash Screen).
+// tela de abertura
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -11,17 +11,15 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  // O método initState é chamado uma única vez, quando a tela é criada.
-  // É o lugar perfeito para iniciar tarefas que acontecem em segundo plano.
+  // chamado quando a tela eh criada
   @override
   void initState() {
     super.initState();
     
-    // Usamos um Timer para esperar um tempo antes de mudar de tela.
+    // espera 3 segundos e vai pra próxima tela
     Timer(const Duration(seconds: 3), () {
-      // Após 3 segundos, a mágica acontece:
-      // O Navigator.pushReplacement troca a tela atual (Splash) pela próxima (AuthGate).
-      // 'pushReplacement' impede que o usuário volte para a tela de Splash com o botão "voltar".
+      // troca a tela de splash pelo authgate
+      // assim o usuário não consegue voltar pra cá
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const AuthGate()),
@@ -29,25 +27,24 @@ class _SplashScreenState extends State<SplashScreen> {
     });
   }
 
-  // O método build desenha a aparência da nossa tela.
+  // desenha o que aparece na tela
   @override
   Widget build(BuildContext context) {
-    // Usamos um Scaffold como esqueleto da tela.
+    // esqueleto da tela
     return Scaffold(
-      // Usamos a mesma cor de fundo do nosso tema para ficar bonito.
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Ícone temático do nosso aplicativo.
+            // icone do app
             Icon(
               Icons.movie_filter_sharp,
               size: 100,
-              color: Theme.of(context).colorScheme.primary, // Cor amarela do tema.
+              color: Theme.of(context).colorScheme.primary,
             ),
             const SizedBox(height: 20),
-            // Título do aplicativo.
+            // titulo do app
             const Text(
               'Meu Catálogo de Filmes',
               style: TextStyle(

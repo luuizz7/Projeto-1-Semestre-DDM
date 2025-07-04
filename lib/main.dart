@@ -1,29 +1,21 @@
-// Importa o pacote principal do Flutter.
 import 'package:flutter/material.dart';
-
-// Importa o pacote principal do Firebase.
 import 'package:firebase_core/firebase_core.dart';
-
-// Importa as configurações do Firebase que foram geradas automaticamente.
 import 'firebase_options.dart'; 
 
-// Importa sua tela de "portão de autenticação".
+// nossa tela de verificação de login
 import 'screens/auth_gate.dart';
 
-
-
-// A função 'main' precisa ser 'async' para que possamos usar 'await' nela.
+// função principal do app
 void main() async {
-  // Garante que o Flutter esteja totalmente inicializado antes de chamar o Firebase.
+  // garante que o flutter iniciou antes de rodar o resto
   WidgetsFlutterBinding.ensureInitialized();
   
-  // ESTE É O CÓDIGO DE INICIALIZAÇÃO NO LUGAR CORRETO
-  // Ele usa as opções do arquivo firebase_options.dart.
+  // inicia o firebase com as nossas configurações
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
   
-  // Inicia o seu aplicativo.
+  // roda o nosso app
   runApp(const MyApp());
 }
 
@@ -34,7 +26,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Catálogo de Filmes',
-      debugShowCheckedModeBanner: false,
+      // tira a faixa de debug (porque se nao tirar ela, fica em cima do nosso botao de sair)
+      debugShowCheckedModeBanner: false, 
+      // tema escuro com detalhes em amarelo
       theme: ThemeData.dark().copyWith(
         primaryColor: Colors.amber,
         colorScheme: ColorScheme.dark().copyWith(
@@ -42,6 +36,7 @@ class MyApp extends StatelessWidget {
           secondary: Colors.blueAccent,
         ),
       ),
+      // a tela inicial é o nosso verificador de login
       home: AuthGate(),
     );
   }
