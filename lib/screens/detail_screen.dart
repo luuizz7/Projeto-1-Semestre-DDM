@@ -1,180 +1,138 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
-class MovieDetailScreen extends StatefulWidget {
-  // Recebe o ID do filme da tela anterior.
+// Esta tela mostra as informações de um filme específico que o usuário selecionou.
+class DetailScreen extends StatelessWidget {
+  // A tela precisa saber o ID do usuário e o ID do filme para buscar os dados certos.
+  final String userId;
   final String movieId;
-  
-  const MovieDetailScreen({super.key, required this.movieId});
 
-  @override
-  _MovieDetailScreenState createState() => _MovieDetailScreenState();
-}
+  // Construtor que recebe os IDs da tela anterior.
+  const DetailScreen({
+    super.key,
+    required this.userId,
+    required this.movieId,
+  });
 
-class _MovieDetailScreenState extends State<MovieDetailScreen> {
-  double _userRating = 0; // Armazena a avaliação que o usuário está dando.
-  bool _isRated = false; // Controla se o usuário já avaliou este filme.
-
-  // Pega o ID do usuário atual para registrar a avaliação em nome dele.
-  String getUserId() {
-    return FirebaseAuth.instance.currentUser!.uid;
-  }
-  
-  @override
-  void initState() {
-    super.initState();
-    _fetchUserRating();
-  }
-
-  // Busca a avaliação que este usuário já deu para este filme, se houver.
-  void _fetchUserRating() async {
-    final userRatingDoc = await FirebaseFirestore.instance
-      .collection('movies').doc(widget.movieId)
-      .collection('ratings').doc(getUserId()).get();
-    
-    if (userRatingDoc.exists) {
-      setState(() {
-        _userRating = (userRatingDoc['rating'] as num).toDouble();
-        _isRated = true;
-      });
-    }
-  }
-
-  // Função para salvar ou atualizar a avaliação do usuário.
-  void _submitRating() {
-    if (_userRating > 0) {
-      // Acessa a subcoleção 'ratings' dentro do documento do filme.
-      // Usa o ID do usuário como ID do documento da avaliação.
-      // Isso garante que cada usuário só pode ter uma avaliação por filme.
-      FirebaseFirestore.instance
-          .collection('movies')
-          .doc(widget.movieId)
-          .collection('ratings')
-          .doc(getUserId())
-          .set({ // 'set' cria o documento se não existir, ou atualiza se já existir.
-            'rating': _userRating,
-            'userId': getUserId(),
-          });
-          
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Avaliação enviada com sucesso!')),
-      );
-      setState(() {
-        _isRated = true;
-      });
-    }
-  }
-  
-  // Widget para construir as estrelas de avaliação.
-  Widget _buildRatingStars(double averageRating) {
-    List<Widget> stars = [];
-    for (int i = 1; i <= 5; i++) {
-      IconData icon = Icons.star_border;
-      if (i <= averageRating) {
-        icon = Icons.star;
-      } else if (i - 0.5 <= averageRating) {
-        icon = Icons.star_half;
-      }
-      stars.add(Icon(icon, color: Colors.amber));
-    }
-    return Row(mainAxisSize: MainAxisSize.min, children: stars);
+  // Função que mostra a janela de confirmação antes de deletar o filme.
+  void _abrirDialogoDeletar(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Confirmar Exclusão'),
+          content: const Text('Tem certeza que quer deletar este filme?'),
+          actions: [
+            TextButton(child: const Text('Cancelar'), onPressed: () => Navigator.of(dialogContext).pop()),
+            TextButton(
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: const Text('Deletar'),
+              onPressed: () {
+                // Deleta o filme do banco de dados.
+                FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(userId)
+                    .collection('movies')
+                    .doc(movieId)
+                    .delete();
+                
+                // Fecha o diálogo e a tela de detalhes, voltando para a lista.
+                Navigator.of(context).popUntil((route) => route.isFirst);
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text("Detalhes do Filme")),
-      // FutureBuilder é ideal para carregar dados que não mudam em tempo real (one-time fetch).
-      // Aqui, ele busca os detalhes do filme uma única vez quando a tela abre.
-      body: FutureBuilder<DocumentSnapshot>(
-        future: FirebaseFirestore.instance.collection('movies').doc(widget.movieId).get(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          }
-          if (!snapshot.hasData || !snapshot.data!.exists) {
-            return Center(child: Text('Filme não encontrado.'));
-          }
+    // Usamos um FutureBuilder para tarefas que demoram um pouco e acontecem só uma vez,
+    // como buscar os dados de um filme específico no Firebase.
+    return FutureBuilder<DocumentSnapshot>(
+      // A "tarefa futura" que ele vai executar: buscar o documento do filme.
+      future: FirebaseFirestore.instance.collection('users').doc(userId).collection('movies').doc(movieId).get(),
+      
+      // O builder desenha a tela com base no resultado da tarefa.
+      builder: (context, snapshot) {
+        
+        // 1. Enquanto a busca está acontecendo, mostramos uma tela de carregamento.
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Scaffold(appBar: AppBar(), body: const Center(child: CircularProgressIndicator()));
+        }
 
-          // Pega os dados do filme.
-          final movieData = snapshot.data!.data() as Map<String, dynamic>;
+        // 2. Se deu algum erro ou o filme não foi encontrado, mostramos um aviso.
+        if (!snapshot.hasData || !snapshot.data!.exists) {
+          return Scaffold(appBar: AppBar(), body: const Center(child: Text('Filme não encontrado.')));
+        }
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
+        // 3. Se a busca deu certo, pegamos os dados do filme.
+        final dadosDoFilme = snapshot.data!.data() as Map<String, dynamic>;
+        final posterUrl = dadosDoFilme['posterUrl'] as String? ?? '';
+        final director = dadosDoFilme['director'] as String? ?? 'N/A';
+        final year = dadosDoFilme['year'] ?? 'N/A';
+
+        // E finalmente, construímos a tela com os dados encontrados.
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(dadosDoFilme['title'] ?? 'Detalhes'),
+            // Adiciona o botão de lixeira na barra de título.
+            actions: [
+              IconButton(icon: const Icon(Icons.delete), tooltip: 'Deletar Filme', onPressed: () => _abrirDialogoDeletar(context)),
+            ],
+          ),
+          // Usamos um SingleChildScrollView para que a tela possa ser rolada
+          // caso a descrição do filme seja muito longa.
+          body: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Center(
-                  child: SizedBox(
+                // Mostra o pôster do filme no topo.
+                if (posterUrl.isNotEmpty)
+                  Image.network(
+                    posterUrl,
+                    width: double.infinity,
                     height: 300,
-                    child: Image.network(movieData['posterUrl'] ?? '', errorBuilder: (context, error, stackTrace) {
-                            return Icon(Icons.movie, size: 100, color: Colors.grey);
-                          },),
+                    fit: BoxFit.cover,
                   ),
-                ),
-                SizedBox(height: 20),
-                Text(movieData['title'] ?? 'Sem título', style: Theme.of(context).textTheme.headlineSmall),
-                SizedBox(height: 8),
-                Text('Diretor: ${movieData['director'] ?? 'N/A'} - Ano: ${movieData['year'] ?? 'N/A'}'),
-                SizedBox(height: 16),
-                Text(movieData['description'] ?? 'Sem descrição.', style: Theme.of(context).textTheme.bodyMedium),
-                Divider(height: 40),
                 
-                // --- Seção de Avaliação Média (StreamBuilder aninhado) ---
-                Text('Avaliação da Comunidade', style: Theme.of(context).textTheme.titleLarge),
-                // Este StreamBuilder observa as avaliações em tempo real.
-                StreamBuilder<QuerySnapshot>(
-                  stream: FirebaseFirestore.instance.collection('movies').doc(widget.movieId).collection('ratings').snapshots(),
-                  builder: (context, ratingSnapshot) {
-                    if (!ratingSnapshot.hasData || ratingSnapshot.data!.docs.isEmpty) {
-                      return Text('Ainda não há avaliações.');
-                    }
-                    // Calcula a média das avaliações.
-                    double total = 0;
-                    for (var doc in ratingSnapshot.data!.docs) {
-                      total += doc['rating'];
-                    }
-                    double average = total / ratingSnapshot.data!.docs.length;
-                    return Row(
-                      children: [
-                        _buildRatingStars(average),
-                        SizedBox(width: 8),
-                        Text('${average.toStringAsFixed(1)} / 5.0'),
-                      ],
-                    );
-                  }
-                ),
-                
-                Divider(height: 40),
-
-                // --- Seção para o Usuário Avaliar ---
-                Text('Sua Avaliação', style: Theme.of(context).textTheme.titleLarge),
-                SizedBox(height: 10),
-                // Slider para o usuário escolher a nota de 1 a 5.
-                Slider(
-                  value: _userRating,
-                  onChanged: (newRating) {
-                    setState(() {
-                      _userRating = newRating;
-                    });
-                  },
-                  min: 0,
-                  max: 5,
-                  divisions: 10, // Permite meias-estrelas (0.5, 1.0, 1.5...)
-                  label: _userRating.toStringAsFixed(1),
-                ),
-                Center(
-                  child: ElevatedButton(
-                    onPressed: _submitRating,
-                    child: Text(_isRated ? 'Atualizar Avaliação' : 'Enviar Avaliação'),
+                // Um Padding para dar um respiro ao redor das informações de texto.
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Título do filme.
+                      Text(
+                        dadosDoFilme['title'] ?? 'Título não disponível',
+                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      // Diretor e Ano.
+                      Text(
+                        'Diretor: $director • Ano: $year',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                      const Divider(height: 32),
+                      // Descrição do filme.
+                      Text(
+                        'Descrição',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        dadosDoFilme['description'] ?? 'Nenhuma descrição fornecida.',
+                        style: Theme.of(context).textTheme.bodyLarge,
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 }

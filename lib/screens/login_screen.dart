@@ -1,117 +1,117 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+// Esta é a tela de Login e Cadastro do nosso aplicativo.
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  _LoginScreenState createState() => _LoginScreenState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  // Chave para validar o formulário de e-mail e senha.
   final _formKey = GlobalKey<FormState>();
+
+  // Controladores para pegar o texto que o usuário digita.
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+
+  // Variável para controlar a animação de "carregando".
   bool _isLoading = false;
 
-  // Função para exibir mensagens de erro (SnackBar) de forma centralizada.
-  void _showErrorSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.redAccent,
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(10),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
-    );
-  }
+  // --- Função para fazer o LOGIN (ENTRAR) ---
+  Future<void> _fazLogin() async {
+    // 1. Valida se os campos foram preenchidos corretamente.
+    if (!_formKey.currentState!.validate()) {
+      return; // Para a execução se o formulário for inválido.
+    }
 
-  Future<void> _handleAuth(Future<UserCredential> Function() authAction) async {
-    if (!_formKey.currentState!.validate()) return;
+    // 2. Mostra a animação de carregando.
     setState(() { _isLoading = true; });
 
+    // 3. Tenta fazer o login no Firebase.
     try {
-      await authAction();
-      // Se a autenticação for bem-sucedida, o AuthGate cuidará da navegação.
-      // Não precisamos fazer nada aqui.
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+      // Se o login der certo, o AuthGate nos levará para a tela principal.
     } on FirebaseAuthException catch (e) {
-      // --- MELHORIA: Lógica para traduzir erros ---
-      String errorMessage;
-      switch (e.code) {
-        case 'user-not-found':
-        case 'wrong-password':
-        case 'invalid-credential':
-          errorMessage = 'E-mail ou senha inválida. Verifique seus dados.';
-          break;
-        case 'email-already-in-use':
-          errorMessage = 'Este e-mail já está em uso. Tente fazer login.';
-          break;
-        case 'weak-password':
-          errorMessage = 'A senha é muito fraca. Tente uma mais forte.';
-          break;
-        case 'invalid-email':
-          errorMessage = 'O formato do e-mail é inválido.';
-          break;
-        default:
-          errorMessage = 'Ocorreu um erro. Tente novamente mais tarde.';
+      // Se der erro, mostra uma mensagem amigável para o usuário.
+      String mensagem = 'Ocorreu um erro.';
+      if (e.code == 'user-not-found' || e.code == 'wrong-password' || e.code == 'invalid-credential') {
+        mensagem = 'E-mail ou senha incorreta.';
       }
-      _showErrorSnackBar(errorMessage);
-    } finally {
-      if (mounted) {
-        setState(() { _isLoading = false; });
-      }
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(mensagem)));
     }
+
+    // 4. Esconde a animação de carregando.
+    setState(() { _isLoading = false; });
+  }
+  
+  // --- Função para CRIAR UMA NOVA CONTA ---
+  Future<void> _criaConta() async {
+    // 1. Valida o formulário.
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    // 2. Mostra o carregando.
+    setState(() { _isLoading = true; });
+
+    // 3. Tenta criar a conta no Firebase.
+    try {
+      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+      // Se der certo, o AuthGate já nos joga para a tela principal.
+    } on FirebaseAuthException catch (e) {
+      // Trata os erros mais comuns de cadastro.
+      String mensagem = 'Ocorreu um erro.';
+      if (e.code == 'email-already-in-use') {
+        mensagem = 'Este e-mail já está cadastrado. Tente fazer login.';
+      } else if (e.code == 'weak-password') {
+        mensagem = 'A senha é muito fraca. Use pelo menos 6 caracteres.';
+      }
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(mensagem)));
+    }
+
+    // 4. Esconde o carregando.
+    setState(() { _isLoading = false; });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Usamos a cor de fundo do tema para manter a consistência.
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Center(
         child: SingleChildScrollView(
-          // MELHORIA: Padding para dar um respiro em volta do formulário.
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          // MELHORIA: Limitamos a largura do formulário para que ele não fique
-          // esticado em telas grandes como a do seu PC.
+          padding: const EdgeInsets.all(24.0),
+          // Caixa para limitar a largura do formulário em telas grandes.
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 400),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // MELHORIA: Adicionamos um ícone e um título para dar identidade visual.
-                Icon(
-                  Icons.movie_filter_sharp,
-                  size: 80,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
+                // Ícone e título da tela.
+                Icon(Icons.movie_filter_sharp, size: 80, color: Theme.of(context).colorScheme.primary),
                 const SizedBox(height: 20),
-                const Text(
-                  'Bem-vindo ao Catálogo',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                const Text('Bem-vindo ao Catálogo', textAlign: TextAlign.center, style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 40),
+                
+                // O formulário com os campos de texto.
                 Form(
                   key: _formKey,
                   child: Column(
                     children: [
                       TextFormField(
                         controller: _emailController,
-                        // MELHORIA: Adicionamos um ícone dentro do campo.
-                        decoration: const InputDecoration(
-                          labelText: 'E-mail',
-                          prefixIcon: Icon(Icons.email_outlined),
-                          border: OutlineInputBorder(),
-                        ),
+                        decoration: const InputDecoration(labelText: 'E-mail', prefixIcon: Icon(Icons.email_outlined), border: OutlineInputBorder()),
                         keyboardType: TextInputType.emailAddress,
                         validator: (value) {
-                          if (value == null || !value.contains('@')) {
+                          if (value == null || value.isEmpty || !value.contains('@')) {
                             return 'Por favor, insira um e-mail válido.';
                           }
                           return null;
@@ -120,15 +120,11 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(height: 16),
                       TextFormField(
                         controller: _passwordController,
-                        decoration: const InputDecoration(
-                          labelText: 'Senha',
-                          prefixIcon: Icon(Icons.lock_outline),
-                          border: OutlineInputBorder(),
-                        ),
-                        obscureText: true,
+                        decoration: const InputDecoration(labelText: 'Senha', prefixIcon: Icon(Icons.lock_outline), border: OutlineInputBorder()),
+                        obscureText: true, // Esconde a senha.
                         validator: (value) {
-                          if (value == null || value.length < 4) {
-                            return 'A senha deve ter pelo menos 4 caracteres.';
+                          if (value == null || value.isEmpty || value.length < 6) {
+                            return 'A senha deve ter pelo menos 6 caracteres.';
                           }
                           return null;
                         },
@@ -137,36 +133,22 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
+                
+                // Se estiver carregando, mostra a animação. Senão, mostra os botões.
                 if (_isLoading)
                   const Center(child: CircularProgressIndicator())
                 else
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // MELHORIA: Botão de "Entrar" com mais destaque.
                       ElevatedButton(
-                        onPressed: () => _handleAuth(
-                          () => FirebaseAuth.instance.signInWithEmailAndPassword(
-                            email: _emailController.text.trim(),
-                            password: _passwordController.text.trim(),
-                          ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          textStyle: const TextStyle(fontSize: 18),
-                        ),
+                        onPressed: _fazLogin, // Chama a função de login.
+                        style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
                         child: const Text('Entrar'),
                       ),
                       const SizedBox(height: 12),
-                      // MELHORIA: Botão de "Criar Conta" como um botão de texto,
-                      // que é uma ação secundária.
                       TextButton(
-                        onPressed: () => _handleAuth(
-                          () => FirebaseAuth.instance.createUserWithEmailAndPassword(
-                            email: _emailController.text.trim(),
-                            password: _passwordController.text.trim(),
-                          ),
-                        ),
+                        onPressed: _criaConta, // Chama a função de criar conta.
                         child: const Text('Não tem uma conta? Criar Conta'),
                       ),
                     ],

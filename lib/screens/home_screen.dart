@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'detail_screen.dart';
 
+// Esta é a tela principal do app, que o usuário vê após o login.
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -11,89 +12,54 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // Pega o ID do usuário logado para saber de quem é a lista de filmes.
-  String getUserId() {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      throw Exception("Usuário não está logado!");
-    }
-    return user.uid;
-  }
 
-  // --- LÓGICA PARA ADICIONAR UM NOVO FILME ---
-  Future<void> _showAddMovieDialog() async {
-    // Controladores para os campos de texto do formulário.
+  // Função simples para pegar o ID do usuário que está logado.
+  String _getUserId() {
+    return FirebaseAuth.instance.currentUser!.uid;
+  }
+  
+  // Função que abre a "janelinha" (AlertDialog) para o usuário adicionar um novo filme.
+  void _abrirDialogoAdicionarFilme() {
+    // Controladores que guardam o texto que o usuário digita nos campos.
     final titleController = TextEditingController();
-    final directorController = TextEditingController();
-    final yearController = TextEditingController();
     final posterUrlController = TextEditingController();
     final descriptionController = TextEditingController();
-
-    // Chave para validar o formulário.
-    final formKey = GlobalKey<FormState>();
-
-    return showDialog<void>(
+    
+    showDialog(
       context: context,
-      builder: (BuildContext context) {
+      builder: (context) {
         return AlertDialog(
           title: const Text('Adicionar Novo Filme'),
+          // Conteúdo da janela com os campos de texto.
           content: SingleChildScrollView(
-            child: Form(
-              key: formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  TextFormField(
-                    controller: titleController,
-                    decoration: const InputDecoration(labelText: 'Título'),
-                    validator: (value) => value!.isEmpty ? 'Campo obrigatório' : null,
-                  ),
-                  TextFormField(
-                    controller: directorController,
-                    decoration: const InputDecoration(labelText: 'Diretor'),
-                  ),
-                  TextFormField(
-                    controller: yearController,
-                    decoration: const InputDecoration(labelText: 'Ano de Lançamento'),
-                    keyboardType: TextInputType.number,
-                  ),
-                  TextFormField(
-                    controller: posterUrlController,
-                    decoration: const InputDecoration(labelText: 'URL da Imagem do Pôster'),
-                  ),
-                  TextFormField(
-                    controller: descriptionController,
-                    decoration: const InputDecoration(labelText: 'Descrição'),
-                    maxLines: 3,
-                  ),
-                ],
-              ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(controller: titleController, decoration: const InputDecoration(labelText: 'Título')),
+                TextField(controller: posterUrlController, decoration: const InputDecoration(labelText: 'URL da Imagem do Pôster')),
+                TextField(controller: descriptionController, decoration: const InputDecoration(labelText: 'Descrição')),
+              ],
             ),
           ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Cancelar'),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
+          // Botões de ação da janela.
+          actions: [
+            TextButton(child: const Text('Cancelar'), onPressed: () => Navigator.of(context).pop()),
             ElevatedButton(
               child: const Text('Salvar'),
               onPressed: () {
-                // Valida o formulário antes de salvar.
-                if (formKey.currentState!.validate()) {
-                  // Salva o filme na subcoleção do usuário.
+                if (titleController.text.isNotEmpty) {
+                  // Adiciona o novo filme na lista do usuário no Firestore.
                   FirebaseFirestore.instance
-                      .collection('users')
-                      .doc(getUserId())
-                      .collection('movies')
-                      .add({
-                    'title': titleController.text,
-                    'director': directorController.text,
-                    'year': int.tryParse(yearController.text) ?? 0,
-                    'posterUrl': posterUrlController.text,
-                    'description': descriptionController.text,
-                    'createdAt': Timestamp.now(), // Para ordenar no futuro
-                  });
-                  Navigator.of(context).pop(); // Fecha o diálogo
+                    .collection('users')
+                    .doc(_getUserId())
+                    .collection('movies')
+                    .add({
+                      'title': titleController.text,
+                      'posterUrl': posterUrlController.text,
+                      'description': descriptionController.text,
+                      'createdAt': Timestamp.now(), // Guarda a data para ordenar.
+                    });
+                  Navigator.of(context).pop(); // Fecha a janela após salvar.
                 }
               },
             ),
@@ -109,90 +75,79 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const Text('Meu Catálogo de Filmes'),
         actions: [
+          // Botão para fazer logout (sair).
           IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: 'Sair',
-            onPressed: () => FirebaseAuth.instance.signOut(),
+            icon: const Icon(Icons.logout), 
+            tooltip: 'Sair', 
+            onPressed: () => FirebaseAuth.instance.signOut()
           ),
         ],
       ),
-      // --- O StreamBuilder AGORA LÊ A SUBCOLEÇÃO DO USUÁRIO ---
+      // O corpo da tela usa um StreamBuilder para "ouvir" as mudanças
+      // na lista de filmes do Firebase em tempo real.
       body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('users')
-            .doc(getUserId())
-            .collection('movies')
-            .orderBy('createdAt', descending: true) // Ordena pelos mais recentes
-            .snapshots(),
+        // O caminho que ele "ouve": a coleção de filmes do usuário logado.
+        stream: FirebaseFirestore.instance.collection('users').doc(_getUserId()).collection('movies').orderBy('createdAt', descending: true).snapshots(),
+        
         builder: (context, snapshot) {
+          // Se estiver carregando, mostra uma animação de progresso.
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
-          if (snapshot.hasError) {
-            return const Center(child: Text('Ocorreu um erro.'));
-          }
+          // Se a lista estiver vazia, mostra uma mensagem amigável.
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            // Mensagem que aparece quando o usuário ainda não adicionou nenhum filme.
-            return const Center(
-              child: Text(
-                'Sua lista está vazia.\nClique no botão + para adicionar um filme.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 18, color: Colors.grey),
-              ),
-            );
+            return const Center(child: Text('Sua lista está vazia.\nClique no + para adicionar um filme.', textAlign: TextAlign.center));
           }
 
-          final movies = snapshot.data!.docs;
+          // Pega a lista de filmes que o Firebase enviou.
+          final filmes = snapshot.data!.docs;
 
+          // Usa o GridView.builder para desenhar a grade de filmes.
           return GridView.builder(
-            padding: const EdgeInsets.all(10.0),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 10.0,
-              mainAxisSpacing: 10.0,
+            padding: const EdgeInsets.all(8.0),
+            // Configuração da grade: itens com no máximo 200px de largura.
+            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: 200,
               childAspectRatio: 0.7,
+              crossAxisSpacing: 8.0,
+              mainAxisSpacing: 8.0,
             ),
-            itemCount: movies.length,
+            itemCount: filmes.length,
+            // 'itemBuilder' desenha um card para cada filme na lista.
             itemBuilder: (context, index) {
-              final movie = movies[index];
-              final posterUrl = movie['posterUrl'] ?? '';
+              final filme = filmes[index];
+              final posterUrl = filme['posterUrl'] as String? ?? '';
 
+              // GestureDetector detecta o clique em cada card.
               return GestureDetector(
                 onTap: () {
-                  // AVISO: A tela de detalhes precisará de ajustes para funcionar com esta nova estrutura.
-                  // Podemos fazer isso no próximo passo.
-                  // Navigator.push(
-                  //   context,
-                  //   MaterialPageRoute(
-                  //     builder: (context) => MovieDetailScreen(movieId: movie.id, userId: getUserId()),
-                  //   ),
-                  // );
+                  // Navega para a tela de detalhes quando um filme é clicado.
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => DetailScreen(
+                        userId: _getUserId(),
+                        movieId: filme.id, // Envia o ID do filme para a próxima tela.
+                      ),
+                    ),
+                  );
                 },
                 child: Card(
+                  clipBehavior: Clip.antiAlias,
                   elevation: 5,
-                  clipBehavior: Clip.antiAlias, // Para cortar a imagem na borda do card
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      // Espaço para a imagem do pôster.
                       Expanded(
                         child: posterUrl.isNotEmpty
-                            ? Image.network(
-                                posterUrl,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    const Icon(Icons.movie, size: 100, color: Colors.grey),
-                              )
-                            : const Icon(Icons.movie, size: 100, color: Colors.grey),
+                          ? Image.network(posterUrl, fit: BoxFit.cover)
+                          : const Icon(Icons.movie, size: 80, color: Colors.grey),
                       ),
+                      // Espaço para o título do filme.
                       Padding(
                         padding: const EdgeInsets.all(8.0),
-                        child: Text(
-                          movie['title'],
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                        child: Text(filme['title'], textAlign: TextAlign.center, maxLines: 2),
                       ),
                     ],
                   ),
@@ -202,9 +157,9 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         },
       ),
-      // --- BOTÃO FLUTUANTE PARA ADICIONAR FILMES ---
+      // Botão flutuante para chamar a janela de adicionar filme.
       floatingActionButton: FloatingActionButton(
-        onPressed: _showAddMovieDialog,
+        onPressed: _abrirDialogoAdicionarFilme,
         tooltip: 'Adicionar Filme',
         child: const Icon(Icons.add),
       ),

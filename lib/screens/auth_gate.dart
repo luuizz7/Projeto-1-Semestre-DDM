@@ -3,28 +3,27 @@ import 'package:flutter/material.dart';
 import 'home_screen.dart';
 import 'login_screen.dart';
 
-// AuthGate é um "portão de autenticação".
-// Ele decide qual tela mostrar com base no status de login do usuário.
+// este widget verifica se o usuario esta logado e direciona para a home (caso nao haja erro)
 class AuthGate extends StatelessWidget {
-  // Adicionando o construtor com a chave, que é uma boa prática.
   const AuthGate({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // StreamBuilder é um widget que se reconstrói sempre que recebe novos dados de uma Stream.
-    // Aqui, ele "ouve" as mudanças no estado de autenticação do Firebase.
+    // O StreamBuilder é um widget que se atualiza automaticamente
+    // com base em um fluxo de dados em tempo real.
     return StreamBuilder<User?>(
-      // FirebaseAuth.instance.authStateChanges() é a stream que notifica
-      // sobre login (retorna um objeto User) ou logout (retorna null).
+      // A fonte de dados é o status de login do usuário no Firebase.
       stream: FirebaseAuth.instance.authStateChanges(),
+      
+      // O builder decide o que mostrar na tela com base na informação mais recente (snapshot).
       builder: (context, snapshot) {
-        // Se há um usuário logado (snapshot.data não é null),
-        // mostramos a tela principal do aplicativo.
+        // Se o snapshot tem dados, significa que o usuário está logado.
         if (snapshot.hasData) {
-          return HomeScreen();
+          // Se logado, mostra a tela principal.
+          return const HomeScreen();
         } else {
-          // Se não há usuário logado (snapshot.data é null), mostramos a tela de login.
-          return const LoginScreen(); // Usando a versão corrigida do LoginScreen
+          // Se não, mostra a tela de login.
+          return const LoginScreen();
         }
       },
     );

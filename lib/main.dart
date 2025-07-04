@@ -10,6 +10,8 @@ import 'firebase_options.dart';
 // Importa sua tela de "portão de autenticação".
 import 'screens/auth_gate.dart';
 
+
+
 // A função 'main' precisa ser 'async' para que possamos usar 'await' nela.
 void main() async {
   // Garante que o Flutter esteja totalmente inicializado antes de chamar o Firebase.
