@@ -2,7 +2,6 @@
 
 Bem-vindo ao **Meu Catálogo de Filmes**! Este é um aplicativo simples e elegante, construído com Flutter e Firebase, que permite criar e gerenciar sua própria coleção de filmes. Com ele, você pode salvar os filmes que já assistiu, os que deseja ver e ter tudo organizado em um só lugar.
 
-
 #### 👨‍🏫 Professora responsável
 Ana Paula Abrantes de Castro Shiguemori
 
@@ -28,6 +27,14 @@ O aplicativo foi estruturado de forma modular para facilitar o entendimento e a 
 * `detail_screen.dart`: Mostra todas as informações de um filme selecionado e oferece a opção de exclusão.
 * `firebase_options.dart`: Arquivo gerado pelo FlutterFire que contém todas as chaves e configurações necessárias para conectar o app ao seu projeto Firebase.
 
+### Fluxo do Usuário
+1.  **Abertura**: O usuário abre o app e vê a `SplashScreen`.
+2.  **Verificação**: Após 3 segundos, o `AuthGate` entra em ação.
+3.  **Login/Cadastro**: Se não houver um usuário logado, a `LoginScreen` é exibida. O usuário pode entrar ou criar uma nova conta.
+4.  **Acesso à Home**: Uma vez autenticado, o usuário é direcionado para a `HomeScreen`, onde pode ver sua lista de filmes.
+5.  **Gerenciamento**: Na `HomeScreen`, ele pode clicar para ver os detalhes (`DetailScreen`) ou adicionar um novo filme através de um diálogo.
+6.  **Sair**: Um botão de "Sair" na barra superior permite que o usuário faça logout de forma segura, retornando à tela de login.
+
 ## 🛠️ Tecnologias Utilizadas
 
 * **Flutter**: Para construir a interface de usuário bonita e nativa para múltiplas plataformas.
@@ -38,9 +45,10 @@ O aplicativo foi estruturado de forma modular para facilitar o entendimento e a 
 ## ⚠️ Limitações Conhecidas
 
 * O aplicativo não possui um modo offline; é necessária uma conexão com a internet para carregar, adicionar ou remover filmes.
-* As informações dos filmes, como pôster e descrição, devem ser inseridas manually pelo usuário.
+* As informações dos filmes, como pôster e descrição, devem ser inseridas manualmente pelo usuário.
 
 Este projeto foi desenvolvido com carinho para ser um exemplo prático e funcional de como integrar Flutter e Firebase.
 
+---
 #### 💻 Desenvolvedores
 Luiz Henrique da Silva Pereira e Luis Gustavo Novaes dos Santos
