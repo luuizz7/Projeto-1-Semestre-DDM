@@ -85,4 +85,5 @@ class DefaultFirebaseOptions {
     storageBucket: 'projetoddm1semestre.firebasestorage.app',
     measurementId: 'G-Q5CXC32VRX',
   );
+
 }
