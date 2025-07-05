@@ -27,13 +27,6 @@ O aplicativo foi estruturado de forma modular para facilitar o entendimento e a 
 * `detail_screen.dart`: Mostra todas as informações de um filme selecionado e oferece a opção de exclusão.
 * `firebase_options.dart`: Arquivo gerado pelo FlutterFire que contém todas as chaves e configurações necessárias para conectar o app ao seu projeto Firebase.
 
-### Fluxo do Usuário
-1.  **Abertura**: O usuário abre o app e vê a `SplashScreen`.
-2.  **Verificação**: Após 3 segundos, o `AuthGate` entra em ação.
-3.  **Login/Cadastro**: Se não houver um usuário logado, a `LoginScreen` é exibida. O usuário pode entrar ou criar uma nova conta.
-4.  **Acesso à Home**: Uma vez autenticado, o usuário é direcionado para a `HomeScreen`, onde pode ver sua lista de filmes.
-5.  **Gerenciamento**: Na `HomeScreen`, ele pode clicar para ver os detalhes (`DetailScreen`) ou adicionar um novo filme através de um diálogo.
-6.  **Sair**: Um botão de "Sair" na barra superior permite que o usuário faça logout de forma segura, retornando à tela de login.
 
 ## 🛠️ Tecnologias Utilizadas
 
