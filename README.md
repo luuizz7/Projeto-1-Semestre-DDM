@@ -42,6 +42,6 @@ O aplicativo foi estruturado de forma modular para facilitar o entendimento e a 
 
 Este projeto foi desenvolvido com carinho para ser um exemplo prático e funcional de como integrar Flutter e Firebase.
 
----
-#### 💻 Desenvolvedores
+
+## 💻 Desenvolvedores
 Luiz Henrique da Silva Pereira e Luis Gustavo Novaes dos Santos
