@@ -2,7 +2,7 @@
 
 Bem-vindo ao **Meu Catálogo de Filmes**! Este é um aplicativo simples e elegante, construído com Flutter e Firebase, que permite criar e gerenciar sua própria coleção de filmes. Com ele, você pode salvar os filmes que já assistiu, os que deseja ver e ter tudo organizado em um só lugar.
 
-#### 👨‍🏫 Professora responsável
+## 👨‍🏫 Professora responsável
 Ana Paula Abrantes de Castro Shiguemori
 
 ## ✨ Funcionalidades Principais
