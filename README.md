@@ -44,4 +44,4 @@ Este projeto foi desenvolvido com carinho para ser um exemplo prático e funcion
 
 
 ## 💻 Desenvolvedores
-Luiz Henrique da Silva Pereira e Luis Gustavo Novaes dos Santos
+#### Luiz Henrique da Silva Pereira e Luis Gustavo Novaes dos Santos
